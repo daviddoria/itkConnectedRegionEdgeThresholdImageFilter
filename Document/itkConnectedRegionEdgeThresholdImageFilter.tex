@@ -1,0 +1,180 @@
+%
+% Complete documentation on the extended LaTeX markup used for Insight
+% documentation is available in ``Documenting Insight'', which is part
+% of the standard documentation for Insight.  It may be found online
+% at:
+%
+%     http://www.itk.org/
+
+\documentclass{InsightArticle}
+
+\usepackage[dvips]{graphicx}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+%\usepackage{algorithmic-fix}
+
+\usepackage{subfig}
+\usepackage{float}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  hyperref should be the last package to be loaded.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[dvips,
+bookmarks,
+bookmarksopen,
+backref,
+colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
+]{hyperref}
+
+
+%  This is a template for Papers to the Insight Journal. 
+%  It is comparable to a technical report format.
+
+% The title should be descriptive enough for people to be able to find
+% the relevant document. 
+\title{Region Growing Using a Criterion on the Region Boundary}
+%itkConnectedRegionEdgeThresholdImageFilter
+% 
+% NOTE: This is the last number of the "handle" URL that 
+% The Insight Journal assigns to your paper as part of the
+% submission process. Please replace the number "1338" with
+% the actual handle number that you get assigned.
+%
+\newcommand{\IJhandlerIDnumber}{3119}
+
+% Increment the release number whenever significant changes are made.
+% The author and/or editor can define 'significant' however they like.
+\release{0.00}
+
+% At minimum, give your name and an email address.  You can include a
+% snail-mail address if you like.
+
+\author{David Doria}
+\authoraddress{Rensselaer Polytechnic Institute, Troy NY
+}
+
+\begin{document}
+
+%
+% Add hyperlink to the web location and license of the paper.
+% The argument of this command is the handler identifier given
+% by the Insight Journal to this paper.
+% 
+\IJhandlefooter{\IJhandlerIDnumber}
+
+
+\ifpdf
+\else
+   %
+   % Commands for including Graphics when using latex
+   % 
+   \DeclareGraphicsExtensions{.eps,.jpg,.gif,.tiff,.bmp,.png}
+   \DeclareGraphicsRule{.jpg}{eps}{.jpg.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.gif}{eps}{.gif.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.tiff}{eps}{.tiff.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.bmp}{eps}{.bmp.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.png}{eps}{.png.bb}{`convert #1 eps:-}
+\fi
+
+
+\maketitle
+
+
+\ifhtml
+\chapter*{Front Matter\label{front}}
+\fi
+
+
+% The abstract should be a paragraph or two long, and describe the
+% scope of the document.
+\begin{abstract}
+\noindent
+This document presents a set of classes which implement a region growing algorithm whose criterion for growth is different than existing ITK region growing algorithms. The region is grown into the query pixel based only on the difference between the query pixel and neighboring pixels that are already members of the region. This allows the region to be grown along paths that change gradually over time and end up looking nothing like they originally did. This is usefully in many situation, including growing surface patches around bends using growth criteria on the normal vectors. The usage and structure of these classes follow the style of itkConnectedThresholdImageFilter. We propose these classes as addition to the Insight Toolkit ITK \url{www.itk.org}.
+
+
+\end{abstract}
+
+\IJhandlenote{\IJhandlerIDnumber}
+
+\tableofcontents
+
+\section{Introduction}
+The Insight Toolkit currently provides two region growing methods. The first is a very non-dynamic growth criterion which makes the user specify a range ([low, high]) for all pixels in the region to fall into. The second growth criterion (itkConfidenceConnectedImageFilter) uses statistics of the entire region that has been grown so far to make a decision about the next pixels membership. These two methods are very standard and well suited to many image segmentation applications. However, it is often useful to grow a region based only on the query pixels immediate neighbors that currently belong to the region. That is, only using the boudary (or edge) of the region in the n-connected neighborhood of the query pixel. This set of classes implements this algorithm.
+
+\section{The New Image Function - itkRegionEdgeFunction}
+The Image Function is the class that the itkFloodFilledImageFunctionConditionalIterator uses to decide if a query pixel should be added to the region. The standard Image Function that is used with itkConnectedThresholdImageFilter is itkBinaryThresholdImageFunction. Again, in an attempt to follow as closely as possible to the existing framework, we model itkRegionEdgeFunction after itkBinaryThresholdImageFunction. The main difference is that we now need access to the OutputImage of the itkConnectedRegionEdgeThresholdImageFilter in the Image Function. This is because the Image Function needs to know if the query pixels neighbors are already in the region. Since itkRegionEdgeFunction is not a subclass of itkConnectedRegionEdgeThresholdImageFilter, we accomplish this by adding an additional template parameter to itkRegionEdgeFunction that defines the type of the outputImage. We can then pass a pointer to the output image using a new function \verb|SetOutputImagePointer(outputImage);|.
+
+In itkRegionEdgeFunction, we use an itkConstNeighborhoodIterator to check all of the query pixels neighbors. If any neighbor is already in the region and ``close enough'' to the query pixel, the query pixel is added to the region.
+
+\begin{algorithm}
+\label{alg:AddPixel}
+\caption{Algorithm to add a query pixel to the region}
+\begin{algorithmic}
+\FORALL{Neighbors of the query pixel}
+\IF{The current neighbor is already in the region}
+\IF{((Neighbor - Lower) $\leq$ QueryPixel) $\&\&$ (Neighbor + Upper) $\geq$ QueryPixel )}
+\STATE Add the query pixel to the region
+\ENDIF
+\ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\section{Parameters and Usage}
+
+To make usage simple, we follow the existing itkConnectedThresholdImageFilter class structure.  The SetLower() and SetUpper() functions, however, now have different meaning. These values are the amounts that the query pixel is allowed to differ relative to its neighboring pixels already in the region. That is (like shown in Algorithm 1), if the value of the query pixel is between $(Neighbor - Lower)$ and $(Neighbor + Upper)$ for any of its neighbors that are already in the region, it should be added to the region.
+
+%this produces 2 instead of 1 like it should?
+%\ref{alg:AddPixel}
+
+
+\section{Examples}
+
+\subsection{Example - Region with Gradient}
+Choosing any seed pixel in the curved region will produce the following segmentation.
+\begin{figure}[H]
+\center
+\subfloat[Original Image]{
+\includegraphics[width=0.3\textwidth]{original_2D}
+\label{fig:Original2D}
+}
+\subfloat[Segmented Image]{
+\includegraphics[width=0.3\textwidth]{output_2D}
+\label{fig:Segmentation2D}
+}
+\caption{An example in 2D.}
+\label{fig:Example2D}
+\end{figure}
+
+\subsection{Usage example}
+\small
+\begin{verbatim}
+	// define the filter
+	typedef itk::ConnectedRegionEdgeThresholdImageFilter < ImageType, ImageType> ConnectedFilterType;
+	ConnectedFilterType::Pointer connectedThreshold = ConnectedFilterType::New();
+	
+	// ... define Lower and Upper (floats)
+	connectedThreshold->SetLower(Lower);
+	connectedThreshold->SetUpper(Upper);
+	
+	connectedThreshold->SetReplaceValue(255);
+	
+	//set the seed
+	ImageType::IndexType seed;
+	// ... define the seed location (unsigned int) ...
+  	seed[0] = Seed;
+
+	connectedThreshold->SetSeed(seed);
+		
+	//setup pipeline
+	connectedThreshold->SetInput(image);
+\end{verbatim}
+
+
+\normalsize
+
+\end{document}
+

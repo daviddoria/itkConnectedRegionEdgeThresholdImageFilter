@@ -1,0 +1,166 @@
+%
+% Complete documentation on the extended LaTeX markup used for Insight
+% documentation is available in ``Documenting Insight'', which is part
+% of the standard documentation for Insight.  It may be found online
+% at:
+%
+%     http://www.itk.org/
+
+\documentclass{InsightArticle}
+
+\usepackage[dvips]{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  hyperref should be the last package to be loaded.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[dvips,
+bookmarks,
+bookmarksopen,
+backref,
+colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
+]{hyperref}
+
+
+%  This is a template for Papers to the Insight Journal. 
+%  It is comparable to a technical report format.
+
+% The title should be descriptive enough for people to be able to find
+% the relevant document. 
+\title{Transforming an itkPointSet}
+
+% 
+% NOTE: This is the last number of the "handle" URL that 
+% The Insight Journal assigns to your paper as part of the
+% submission process. Please replace the number "1338" with
+% the actual handle number that you get assigned.
+%
+\newcommand{\IJhandlerIDnumber}{3112}
+
+% Increment the release number whenever significant changes are made.
+% The author and/or editor can define 'significant' however they like.
+\release{0.00}
+
+% At minimum, give your name and an email address.  You can include a
+% snail-mail address if you like.
+
+\author{David Doria}
+\authoraddress{Rensselaer Polytechnic Institute, Troy NY
+}
+
+%\author{David Doria$^{1}$ and Luiz Ibanez$^{2}$}
+%\authoraddress{$^{1}$Rensselaer Polytechnic Institute, Troy NY\\
+%$^{2}$Kitware, Inc., Clifton Park NY
+%}
+
+\begin{document}
+
+%
+% Add hyperlink to the web location and license of the paper.
+% The argument of this command is the handler identifier given
+% by the Insight Journal to this paper.
+% 
+\IJhandlefooter{\IJhandlerIDnumber}
+
+
+\ifpdf
+\else
+   %
+   % Commands for including Graphics when using latex
+   % 
+   \DeclareGraphicsExtensions{.eps,.jpg,.gif,.tiff,.bmp,.png}
+   \DeclareGraphicsRule{.jpg}{eps}{.jpg.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.gif}{eps}{.gif.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.tiff}{eps}{.tiff.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.bmp}{eps}{.bmp.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.png}{eps}{.png.bb}{`convert #1 eps:-}
+\fi
+
+
+\maketitle
+
+
+\ifhtml
+\chapter*{Front Matter\label{front}}
+\fi
+
+
+% The abstract should be a paragraph or two long, and describe the
+% scope of the document.
+\begin{abstract}
+\noindent
+This document presents a set of classes to enable operations on itkPointSet objects. In particular, itkTransformPointSetFilter allows a transformation to be applied to a set of points. We propose these classes as addition to the Insight Toolkit ITK \url{www.itk.org}.
+
+\end{abstract}
+
+\IJhandlenote{\IJhandlerIDnumber}
+
+\tableofcontents
+
+The Insight Toolkit provides a container, itkMesh, for data sets which contain geometry and topology. Another container, itkPointSet is provided for data sets consisting only of points (no topology). However, many functions which apply to both meshes and point sets are implemented only for meshes. Users have been required to instantiate a topology-less itkMesh in order to perform operations (for example, transformations) to their point set data. This set of classes removes that requirement and allows point sets to be operated on more intuitively.
+
+\section{Transforming an itkPointSet}
+
+As to mirror the existing itkTransformMeshFilter class structure, we created itkPointSetSource and itkPointSetToPointSetFilter as supporting classes for itkPointSetTransformFilter. The PointSetTransformFilter is designed to work exactly as the existing MeshTransformFilter. The following code snipped demonstrates how to apply a transform to an itkPointSet:
+\small
+\begin{verbatim}
+ // Declare the pointset pixel type.
+  typedef itk::PointSet<double, 3 > PointSetType;
+
+  // Declare the type for PointsContainer
+  typedef PointSetType::PointsContainer     PointsContainerType;
+
+  // Declare the type for PointsContainerPointer
+  typedef PointSetType::PointsContainerPointer     
+                                        PointsContainerPointer;
+  // Declare the type for Points
+  typedef PointSetType::PointType PointType;
+
+  // Create an input PointSet
+  PointSetType::Pointer inputPointSet = PointSetType::New();
+
+  // Insert data in the PointSet
+  PointsContainerPointer  points = inputPointSet->GetPoints();
+
+  // Fill the PointSet with data
+  
+  PointType p;
+  p[0] = 1.0; // x coordinate
+  p[1] = 2.0; // y coordinate
+  p[2] = 3.0; // z coordinate
+  points->InsertElement( count, p );
+
+  //... continue filling point set...
+  
+  // Declare the transform type
+  typedef itk::AffineTransform<float,3> TransformType;
+
+  // Declare the type for the filter
+  typedef itk::TransformPointSetFilter<
+                                PointSetType,
+                                PointSetType,
+                                TransformType  >       FilterType;
+
+  // Create a Filter
+  FilterType::Pointer filter = FilterType::New();
+
+  // Create an  Transform 
+  TransformType::Pointer   affineTransform = TransformType::New();
+  TransformType::OffsetType::ValueType tInit[3] = {100,200,300};
+  TransformType::OffsetType   translation = tInit;
+  affineTransform->Translate( translation );
+
+  // Connect the inputs
+  filter->SetInput( inputPointSet ); 
+  filter->SetTransform( affineTransform ); 
+
+  // Execute the filter
+  filter->Update();
+\end{verbatim}
+
+
+\normalsize
+
+\end{document}
+

@@ -1,0 +1,25 @@
+\ProvidesPackage{algorithmic-fix}
+%[2008/02/27 v0.1 Fixes algorithmic for hyperref (capt...@sommerfee.de)]
+% 1. Replace the two wrong \refstepcounter's with \stepcounter's
+\begingroup
+  \long\def\x#1\refstepcounter#2\@nil{%
+    \endgroup
+    \def\ALC@item[##1]{#1\stepcounter#2}}%
+\expandafter\x\ALC@item[{#1}]\@nil
+\newcommand\ALC@list{%
+  \begingroup
+    \long\def\x\refstepcounter##1\@nil{%
+      \endgroup
+      \def\ALC@it{\stepcounter##1}}%
+  \expandafter\x\ALC@it\@nil
+  \let\list\ORI@list\list}%
+\renewcommand\ALC@setref{}%
+% 2. Define a unique \theHALC@line
+\newcounter{algorithmic}
+\let\ORI@algorithmic\algorithmic
+\def\algorithmic{%
+  \stepcounter{algorithmic}%
+  \let\ORI@list\list\let\list\ALC@list\ORI@algorithmic}
+\def\theHALC@line{\thealgorithmic-\theALC@line}
+% That's all
+\endinput
