@@ -6,7 +6,7 @@
 #include "itkImageFileWriter.h"
 #include "itkRescaleIntensityImageFilter.h"
 #include "itkExtractImageFilter.h"
-#include "itkDifferenceImageFilter.h"
+#include "itkComparisonImageFilter.h"
 
 using namespace std;
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
       {
       RegressionTestImage(argv[1], argv[bestBaseline], 1, true);
       }
-    
+
     }
   catch(const itk::ExceptionObject& e)
     {
@@ -123,7 +123,7 @@ int RegressionTestImage (const char *testImageFilename, const char *baselineImag
     baselineSize = baselineReader->GetOutput()->GetLargestPossibleRegion().GetSize();
   ImageType::SizeType testSize;
     testSize = testReader->GetOutput()->GetLargestPossibleRegion().GetSize();
-  
+
   if (baselineSize != testSize)
     {
     std::cerr << "The size of the Baseline image and Test image do not match!" << std::endl;
@@ -135,7 +135,7 @@ int RegressionTestImage (const char *testImageFilename, const char *baselineImag
     }
 
   // Now compare the two images
-  typedef itk::DifferenceImageFilter<ImageType,ImageType> DiffType;
+  typedef itk::Testing::ComparisonImageFilter<ImageType,ImageType> DiffType;
   DiffType::Pointer diff = DiffType::New();
     diff->SetValidInput(baselineReader->GetOutput());
     diff->SetTestInput(testReader->GetOutput());
@@ -144,7 +144,7 @@ int RegressionTestImage (const char *testImageFilename, const char *baselineImag
 
   double status = diff->GetTotalDifference();
 
-  
+
   if (reportErrors)
     {
     typedef itk::RescaleIntensityImageFilter<ImageType,OutputType> RescaleType;
@@ -162,7 +162,7 @@ int RegressionTestImage (const char *testImageFilename, const char *baselineImag
 
     RegionType region;
     region.SetIndex(index);
-    
+
     size = rescale->GetOutput()->GetLargestPossibleRegion().GetSize();
     for (unsigned int i = 2; i < ITK_TEST_DIMENSION_MAX; i++)
       {
