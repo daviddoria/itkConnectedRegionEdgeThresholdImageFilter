@@ -13,6 +13,11 @@
 
 int main( int argc, char *argv[])
 {
+  if(argc < 7)
+  {
+    std::cerr << "Required parameters: input.png SeedRow SeedCol Lower Upper output.png" << std::endl;
+    return EXIT_FAILURE;
+  }
   // Required parameters:
   // ./itkConnectedRegionEdgeThresholdImageFilter_Test2D input.png SeedRow SeedCol Lower Upper output.png
   // e.g.
@@ -23,39 +28,43 @@ int main( int argc, char *argv[])
   std::string strLower = argv[4];
   std::string strUpper = argv[5];
   std::string strOutputFilename = argv[6];
-  
-  std::cout << "Input: " << strInputFilename << std::endl;
-  std::cout << "Output: " << strOutputFilename << std::endl;
-  
+
   // Convert the seed to integers
   itk::Index<2> seed;
   std::stringstream ssSeedRow(strSeedRow);
   ssSeedRow >> seed[1];
-  
+
   std::stringstream ssSeedCol(strSeedCol);
   ssSeedCol >> seed[0];
-  
+
   // Convert lower and upper to floats
   std::stringstream ssLower(strLower);
   float lower;
   ssLower >> lower;
-  
+
   std::stringstream ssUpper(strUpper);
   float upper;
   ssUpper >> upper;
-    
+
+  std::cout << "Input: " << strInputFilename << std::endl;
+  std::cout << "Seed: " << seed << std::endl;
+  std::cout << "Lower threshold: " << lower << std::endl;
+  std::cout << "Upper threshold: " << upper << std::endl;
+  std::cout << "Output: " << strOutputFilename << std::endl;
+
   // Setup image types
   typedef itk::Image< float, 2>          InternalImageType;
   typedef itk::Image< unsigned char, 2>  ExternalImageType;
-  
+
   // Read the input image
   typedef itk::ImageFileReader<InternalImageType> ReaderType;
   ReaderType::Pointer reader = ReaderType::New();
   reader->SetFileName(strInputFilename.c_str());
   reader->Update();
-    
+
   // Perform the region growing
-  typedef itk::ConnectedRegionEdgeThresholdImageFilter < InternalImageType, InternalImageType> ConnectedFilterType;
+  typedef itk::ConnectedRegionEdgeThresholdImageFilter < InternalImageType, InternalImageType>
+                ConnectedFilterType;
   ConnectedFilterType::Pointer connectedThreshold = ConnectedFilterType::New();
   connectedThreshold->SetLower(lower);
   connectedThreshold->SetUpper(upper);
@@ -68,7 +77,7 @@ int main( int argc, char *argv[])
   typedef itk::CastImageFilter< InternalImageType, ExternalImageType > CastFilterType;
   CastFilterType::Pointer castFilter = CastFilterType::New();
   castFilter->SetInput(connectedThreshold->GetOutput() );
-  
+
   // Write the result
   typedef  itk::ImageFileWriter< ExternalImageType  > WriterType;
   WriterType::Pointer writer = WriterType::New();

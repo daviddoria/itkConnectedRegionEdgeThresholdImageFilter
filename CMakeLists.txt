@@ -45,9 +45,8 @@ TARGET_LINK_LIBRARIES(itkConnectedRegionEdgeThresholdImageFilter_Test1D ${ITK_LI
 #######################
 # 1 dimensional example
 # Executable
-SET(itkConnectedRegionEdgeThresholdImageFilter_Test2D)
-ADD_EXECUTABLE(itkConnectedRegionEdgeThresholdImageFilter_Test2D itkConnectedRegionEdgeThresholdImageFilter_Test2D.cxx)
-TARGET_LINK_LIBRARIES(itkConnectedRegionEdgeThresholdImageFilter_Test2D ${ITK_LIBRARIES})
+ADD_EXECUTABLE(Demo2D Demo2D.cxx)
+TARGET_LINK_LIBRARIES(Demo2D ${ITK_LIBRARIES})
 
 
 
