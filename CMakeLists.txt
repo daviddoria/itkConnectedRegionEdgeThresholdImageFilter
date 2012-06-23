@@ -12,9 +12,10 @@ INCLUDE(Dart)
 # ITK
 # )
 
-find_package(ITK REQUIRED)
+find_package(ITK 4 REQUIRED)
 include(${ITK_USE_FILE})
 
+# This should not be required...
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
