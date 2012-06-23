@@ -98,7 +98,7 @@ bool
 RegionEdgeFunction<TInputImage,TOutputImageType, TCoordRep>
 ::EvaluateAtIndex( const IndexType & index ) const
 {
-  PixelType value = this->GetInputImage()->GetPixel(index);
+  PixelType currentPixelValue = this->GetInputImage()->GetPixel(index);
 
   typedef ConstNeighborhoodIterator< InputImageType > NeighborhoodIteratorType;
   typename NeighborhoodIteratorType::RadiusType radius;
@@ -118,52 +118,42 @@ RegionEdgeFunction<TInputImage,TOutputImageType, TCoordRep>
       return true;
       }
     //std::cout << "Checking " << index << " against " << it.GetIndex(i) << std::endl;
-    
-    //check if the current neighbor pixel is in the region
-    //typename TOutputImageType::IndexType OutputImagePixelIndex;//working
+
     typename TOutputImageType::IndexType OutputImagePixelIndex = it.GetIndex(i);
+
+    // Do not check the pixel against itself
+    if(OutputImagePixelIndex == index)
+      {
+      continue;
+      }
+
+    // Get the current neighbor value
+    bool valid = true;
+    PixelType CurrentNeighbor = it.GetPixel(i, valid);
+
+    // Don't use this neighbor if it is outside of the image
+    if(!valid)
+      {
+      continue;
+      }
+
+    // Don't compare if the current neighbor is not inside the object region
     OutputImagePixelType OutputImagePixel = OutputImage->GetPixel(OutputImagePixelIndex);
     if(OutputImagePixel == NumericTraits<OutputImagePixelType>::Zero)
       {
-      //the pixel is not in the region!
-      /*
-      std::cout << "This neighbor is not in the region!" << std::endl;
-      for(unsigned int i = 0; i < 20; i++)
-      {
-	      typename TOutputImageType::IndexType TempOutputImagePixelIndex;
-	      TempOutputImagePixelIndex[0] = i;
-	      OutputImagePixelType TempOutputImagePixel = OutputImage->GetPixel(TempOutputImagePixelIndex);
+      continue;
+      }
 
-	      std::cout << TempOutputImagePixel << " ";
-      }
-      */
-      continue;
-      }
-    
-    //Do not check the pixel against itself
-    if(i == it.Size()/2)
-      {
-      //std::cout << "Do not check this one!" << std::endl;
-      continue;
-      }
-    
-    bool valid = true;
-    PixelType CurrentNeighbor = it.GetPixel(i, valid);
-    if(!valid)
-      {
-      //std::cout << "Pixel " << it.GetIndex(i) << " is not valid." << std::endl;
-      continue;
-      }
-    
     // if value falls in the acceptable range
-    if( (CurrentNeighbor - m_Lower) <= value && (CurrentNeighbor + m_Upper) >= value )
+    if( (CurrentNeighbor - m_Lower) <= currentPixelValue &&
+        (CurrentNeighbor + m_Upper) >= currentPixelValue )
       {
       //std::cout << "Add pixel " << index << " to region!" << std::endl << std::endl;
       return true;
       }
     }
-    
-    //std::cout << "Do NOT add pixel " << index << " to region!" << std::endl << std::endl;
+
+  //std::cout << "Do NOT add pixel " << index << " to region!" << std::endl << std::endl;
   return false;
 }
 
