@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.6)
 
 INCLUDE(${CMAKE_SOURCE_DIR}/IJMacros.txt)
 
-#Change PROJECT_NAME to the name of your project
 PROJECT(itkConnectedRegionEdgeThresholdImageFilter)
 
 #The following lines are required to use Dart
@@ -10,18 +9,6 @@ ENABLE_TESTING()
 INCLUDE(Dart)
 
 
-#Declare any external dependencies that your project may have here.
-#examples include: ITK, VTK, JPEG, PNG, OpenGL, ZLIB, Perl, Java
-#If you're not sure what name to use, look in the Modules directory of your
-#cmake install and check that a file named Find(Package).cmake exists
-#
-# The packages can be specified with a version number, for example:
-#
-# ITK 2.8.1
-# ITK 3.2.0
-#
-# If no version is specified, the most recent release of the package
-# will be used.
 SET(Required_Packages
 ITK
 )
@@ -32,9 +19,6 @@ FOREACH(Package ${Required_Packages})
   LOADPACKAGE(${Package})
 ENDFOREACH(Package)
 
-#Set any libraries that your project depends on.
-#examples: ITKCommon, VTKRendering, etc
-
 #######################
 # 1 dimensional example
 # Executable
@@ -43,8 +27,7 @@ ADD_EXECUTABLE(itkConnectedRegionEdgeThresholdImageFilter_Test1D itkConnectedReg
 TARGET_LINK_LIBRARIES(itkConnectedRegionEdgeThresholdImageFilter_Test1D ${ITK_LIBRARIES})
 
 #######################
-# 1 dimensional example
-# Executable
+# 2 dimensional example
 ADD_EXECUTABLE(Demo2D Demo2D.cxx)
 TARGET_LINK_LIBRARIES(Demo2D ${ITK_LIBRARIES})
 

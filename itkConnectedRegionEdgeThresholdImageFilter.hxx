@@ -27,6 +27,8 @@
 #include "itkShapedFloodFilledImageFunctionConditionalIterator.h"
 #endif
 
+#include <stdexcept>
+
 namespace itk
 {
 
@@ -292,10 +294,20 @@ ConnectedRegionEdgeThresholdImageFilter<TInputImage,TOutputImage>
   function->SetOutputImagePointer(outputImage);
 
   ProgressReporter progress(this, 0, region.GetNumberOfPixels());
-  
-  // Set the seed pixel to be in the region that is produced
-  outputImage->SetPixel(m_SeedList[0], m_ReplaceValue);
-  		  
+
+  // Set the seed pixels to be in the region that is produced
+  for(unsigned int i = 0; i < m_SeedList.size(); ++i)
+  {
+    if(!outputImage->GetLargestPossibleRegion().IsInside(m_SeedList[i]))
+    {
+      std::stringstream ss;
+      ss << "Pixel " << m_SeedList[i] << " is not inside the image ("
+         << outputImage->GetLargestPossibleRegion() << ")";
+      throw std::runtime_error(ss.str());
+    }
+    outputImage->SetPixel(m_SeedList[i], m_ReplaceValue);
+  }
+
   if (this->m_Connectivity == FaceConnectivity)
     {
     typedef FloodFilledImageFunctionConditionalIterator<OutputImageType, FunctionType> IteratorType;

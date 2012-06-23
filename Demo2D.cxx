@@ -14,9 +14,14 @@ static void CreateImage(UnsignedCharImageType* const image);
 
 int main( int argc, char *argv[])
 {
-  itk::Index<2> seed = {{50,50}};
-  float lower = 80;
-  float upper = 110;
+  //itk::Index<2> seed = {{50,50}}; // a pixel that is inside the blob
+  itk::Index<2> seed = {{150,150}}; // a pixel that is outside the blob
+  //itk::Index<2> seed = {{400,400}}; // a pixel that is outside of the image
+
+  // Pixels in a range within 10 below and 10 above of the seed pixels
+  // (and as the region grows, the new boundary pixels) will be included in the output
+  float lower = 10;
+  float upper = 10;
   UnsignedCharImageType::Pointer image = UnsignedCharImageType::New();
   CreateImage(image);
 
@@ -45,11 +50,7 @@ void CreateImage(UnsignedCharImageType* const image)
 {
   UnsignedCharImageType::IndexType corner = {{0,0}};
 
-  UnsignedCharImageType::SizeType size;
-  unsigned int NumRows = 200;
-  unsigned int NumCols = 300;
-  size[0] = NumRows;
-  size[1] = NumCols;
+  UnsignedCharImageType::SizeType size = {{200,200}};
 
   UnsignedCharImageType::RegionType region(corner, size);
 
